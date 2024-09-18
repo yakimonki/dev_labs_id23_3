@@ -26,3 +26,21 @@
 23. Фролкин Аркадий Дмитриевич - Frolkin_id23_3
 24. Хазанова Евгения Ярославовна - Khazanova_id23_3
 25. Шалаева Александра Александровна - Shalaeva_id23_3
+
+| Students       | 1lab   | 2lab | 3lab | 4lab |
+|----------------|--------|------|------|------|
+| Dvortsov       | сдано  |      |      |      |
+| Kazantseva     | сдано  |      |      |      |
+| Antonova       | сдано  |      |      |      |
+| Serebrennikova | сдано  |      |      |      |
+| Belkov         | сдано  |      |      |      |
+| Baranov        | сдано  |      |      |      |
+| Politova       | сдано  |      |      |      |
+| Grishanov      | сдано  |      |      |      |
+| Orlovsky       | сдано  |      |      |      |
+| Kononov        | сдано  |      |      |      |
+| Viklov         | сдано  |      |      |      |
+| Putintseva     | сдано  |      |      |      |
+| Kirushev       | сдано  |      |      |      |
+| Frolkin        | сдано  |      |      |      |
+
