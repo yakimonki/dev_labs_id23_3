@@ -29,9 +29,9 @@
 
 | Students       | 1lab   | 2lab | 3lab | 4lab |
 |----------------|--------|------|------|------|
-| Dvortsov       | сдано  |      |      |      |
+| Dvortsov       | сдано  | сдано|      |      |
 | Kazantseva     | сдано  |      |      |      |
-| Antonova       | сдано  |      |      |      |
+| Antonova       | сдано  | сдано|      |      |
 | Serebrennikova | сдано  |      |      |      |
 | Belkov         | сдано  |      |      |      |
 | Baranov        | сдано  |      |      |      |
@@ -41,6 +41,12 @@
 | Kononov        | сдано  |      |      |      |
 | Viklov         | сдано  |      |      |      |
 | Putintseva     | сдано  |      |      |      |
-| Kirushev       | сдано  |      |      |      |
-| Frolkin        | сдано  |      |      |      |
-
+| Kirushev       | сдано  |сдано |      |      |
+| Frolkin        | сдано  |сдано*|      |      |
+| Matevosov      | сдано  |      |      |      |
+| Serov          | сдано  |      |      |      |
+| Li             | сдано  |      |      |      |
+| Ruzanov| сдано| | | |
+| Baranov| сдано| | | |
+| Gogin| сдано| сдано*| | | 
+| Agapov| сдано| | | |
