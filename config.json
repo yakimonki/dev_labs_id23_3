@@ -1,0 +1,7 @@
+{
+    "fall_speed_min": 10,
+    "fall_speed_max": 30,
+    "max_rains": 10,
+    "angle_min": -3,
+    "angle_max": 3
+}
