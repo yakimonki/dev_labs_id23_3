@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         # Таймеры
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_rains_pads_position)
-        self.update_timer.start(5)  # Обновление положения капель каждые 40 мс
+        self.update_timer.start(5)  # Обновление положения капель каждые n-ое кол-во секунд мс
 
         self.spawn_timer = QTimer()
         self.spawn_timer.timeout.connect(self.spawn_rains_pads)
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
             self.angle_max = 2
 
     def schedule_next_spawn(self):
-        random_interval = random.randint(0, 5)  # Случайный интервал между спавнами (100-1000 мс)
+        random_interval = random.randint(0, 5)  # Случайный интервал между спавнами
         self.spawn_timer.start(random_interval)
 
     def update_rains_pads_position(self):
