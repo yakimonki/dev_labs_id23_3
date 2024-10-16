@@ -30,14 +30,14 @@
 | Students       | 1lab   | 2lab | 3lab | 4lab |
 |----------------|--------|------|------|------|
 | Dvortsov       | сдано  | сдано|      |      |
-| Kazantseva     | сдано  |      |      |      |
+| Kazantseva     | сдано  | сдано     |      |      |
 | Antonova       | сдано  | сдано|      |      |
 | Serebrennikova | сдано  |      |      |      |
-| Belkov         | сдано  |      |      |      |
+| Belkov         | сдано  | сдано     |      |      |
 | Baranov        | сдано  |      |      |      |
 | Politova       | сдано  |      |      |      |
 | Grishanov      | сдано  |      |      |      |
-| Orlovsky       | сдано  |      |      |      |
+| Orlovsky       | сдано  | сдано     |      |      |
 | Kononov        | сдано  |      |      |      |
 | Viklov         | сдано  |      |      |      |
 | Putintseva     | сдано  |      |      |      |
