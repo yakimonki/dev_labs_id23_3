@@ -36,7 +36,7 @@
 | Belkov         | сдано  | сдано     |      |      |
 | Baranov        | сдано  |      |      |      |
 | Politova       | сдано  | сдано|      |      |
-| Grishanov      | сдано  |      |      |      |
+| Grishanov      | сдано  |  сдано    |      |      |
 | Orlovsky       | сдано  | сдано     |      |      |
 | Kononov        | сдано  |      |      |      |
 | Viklov         | сдано  |      |      |      |
