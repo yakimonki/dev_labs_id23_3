@@ -35,7 +35,7 @@
 | Serebrennikova | сдано  |      |      |      |
 | Belkov         | сдано  | сдано     |      |      |
 | Baranov        | сдано  |      |      |      |
-| Politova       | сдано  |      |      |      |
+| Politova       | сдано  | сдано|      |      |
 | Grishanov      | сдано  |      |      |      |
 | Orlovsky       | сдано  | сдано     |      |      |
 | Kononov        | сдано  |      |      |      |
