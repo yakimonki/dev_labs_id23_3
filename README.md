@@ -40,7 +40,7 @@
 | Orlovsky       | сдано  | сдано     |      |      |
 | Kononov        | сдано  |      |      |      |
 | Viklov         | сдано  |      |      |      |
-| Putintseva     | сдано  |      |      |      |
+| Putintseva     | сдано  | сдано|      |      |
 | Kirushev       | сдано  |сдано |      |      |
 | Frolkin        | сдано  |сдано*|      |      |
 | Matevosov      | сдано  |      |      |      |
