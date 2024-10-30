@@ -32,7 +32,7 @@
 | Dvortsov       | сдано  | сдано|      |      |
 | Kazantseva     | сдано  | сдано     |      |      |
 | Antonova       | сдано  | сдано|      |      |
-| Serebrennikova | сдано  |      |      |      |
+| Serebrennikova | сдано  | сдано|      |      |
 | Belkov         | сдано  | сдано     |      |      |
 | Baranov        | сдано  |      |      |      |
 | Politova       | сдано  | сдано|      |      |
