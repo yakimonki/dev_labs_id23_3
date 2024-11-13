@@ -1,204 +1,185 @@
 from tkinter import *
-import json
-import random
-from threading import Timer
+import json as j
+import random as r
+from threading import Timer as T
 
 try:
-    with open("data.json", 'r') as settings:
-        base_settings = json.load(settings)
+    with open("data.json", 'r') as s:
+        _ = j.load(s)
 except FileNotFoundError:
-    base_settings = {
-        'BIRDS_COUNT': 5,
-        'PILLARS_DURABILITY': 2,
-        'PILLARS_REPAIR_INTERVAL': 5,
-    }
-    with open('data.json', 'w') as settings:
-        json.dump(base_settings, settings)
+    _ = {'A': 5, 'B': 2, 'C': 5}
+    with open('data.json', 'w') as s:
+        j.dump(_, s)
 
 
-class MainCanvas(Canvas):
-
-    def __init__(self, root: Tk):
-        super().__init__(root, width=500, height=500)
+class X(Canvas):
+    def __init__(self, y: Tk):
+        super().__init__(y, width=500, height=500)
         self.pack()
 
 
-class Pillar:
-
-    def __init__(self, canvas: MainCanvas, max_birds: int, recovery_time: int, x: int, y: int):
-        self.max_birds = max_birds
-        self.canvas = canvas
-        self.recovery_time = recovery_time
-        self.count_birds = 0
+class Q:
+    def __init__(self, g: X, l: int, w: int, x: int, y: int):
+        self.l = l
+        self.g = g
+        self.w = w
+        self.k = 0
         self.x = x
-        self.break_pillar_flag = False
+        self.b = False
         self.y = y
-        self.post_id = None
-        self.beam_id = None
-        self.is_fixed = True
-        self.check_birds()
+        self.s, self.r = None, None
+        self.a = True
+        self.v()
 
-    def draw(self):
-        self.post_id = self.canvas.create_rectangle(self.x, self.y, self.x + 10, self.y + 200, fill='brown',
-                                                    outline='brown')
-        self.beam_id = self.canvas.create_rectangle(self.x - 30, self.y, self.x + 40, self.y + 10, fill='brown',
-                                                    outline='brown')
+    def f(self):
+        self.s = self.g.create_rectangle(self.x, self.y, self.x + 10, self.y + 200, fill='brown', outline='brown')
+        self.r = self.g.create_rectangle(self.x - 30, self.y, self.x + 40, self.y + 10, fill='brown', outline='brown')
 
-    def increase_birds_count(self):
-        self.count_birds += 1
+    def i(self):
+        self.k += 1
 
-    def decrease_birds_count(self):
-        self.count_birds -= 1
+    def d(self):
+        self.k -= 1
 
-    def break_pillar(self):
-        if not self.break_pillar_flag:
-            self.canvas.itemconfigure(self.beam_id, state='hidden')
-            self.canvas.itemconfigure(self.post_id, state='hidden')
-            self.is_fixed = False
-            self.break_pillar_flag = True
-            timer = Timer(self.recovery_time, self.fix_pillar)
-            timer.start()
+    def bq(self):
+        if not self.b:
+            self.g.itemconfigure(self.r, state='hidden')
+            self.g.itemconfigure(self.s, state='hidden')
+            self.a = False
+            self.b = True
+            t = T(self.w, self.fq)
+            t.start()
 
-    def fix_pillar(self):
-        self.canvas.itemconfigure(self.beam_id, state='normal')
-        self.canvas.itemconfigure(self.post_id, state='normal')
-        self.is_fixed = True
-        self.break_pillar_flag = False
+    def fq(self):
+        self.g.itemconfigure(self.r, state='normal')
+        self.g.itemconfigure(self.s, state='normal')
+        self.a = True
+        self.b = False
 
-    def check_birds(self):
-        if self.is_fixed:
-            if self.count_birds >= self.max_birds:
-                self.break_pillar()
-
-        self.canvas.after(100, self.check_birds)
+    def v(self):
+        if self.a:
+            if self.k >= self.l:
+                self.bq()
+        self.g.after(100, self.v)
 
 
-class Bird:
-    def __init__(self, canvas: MainCanvas, sitting_time: int, pillars: [Pillar]):
-        self.is_leave = False
-        self.leave_timer = None
-        self.sitting_time = sitting_time
-        self.canvas = canvas
-        self.x = random.randint(50, 550)
-        self.y = random.randint(50, 250)
-        self.animation_progress = False
-        self.bird_id = None
-        self.is_can_fly = True
-        self.pillars = pillars
-        self.current_pillar = None
+class Y:
+    def __init__(self, g: X, z: int, q: [Q]):
+        self.leave = False
+        self.lt = None
+        self.z = z
+        self.g = g
+        self.x = r.randint(50, 550)
+        self.y = r.randint(50, 250)
+        self.ap = False
+        self.id = None
+        self.flyable = True
+        self.q = q
+        self.cp = None
 
-    def draw(self):
-        self.bird_id = self.canvas.create_oval(0, 0, 20, 20, fill='grey')
-        self.canvas.coords(self.bird_id, self.x - 10, self.y - 10, self.x + 10, self.y + 10)
+    def dr(self):
+        self.id = self.g.create_oval(0, 0, 20, 20, fill='grey')
+        self.g.coords(self.id, self.x - 10, self.y - 10, self.x + 10, self.y + 10)
 
-    def animation(self, x, y, on_animation_ended=None):
-        self.is_can_fly = False
-        if not self.animation_progress:
-            self.animation_progress = True
-            dx = x - self.x
-            dy = y - self.y
-            self.x = x
-            self.y = y
-            length = (dx ** 2 + dy ** 2) ** .5
-            step = 10
-            step_x = step / length * dx
-            step_y = step / length * dy
-
-            progress = 0
+    def anim(self, a, b, on_end=None):
+        self.flyable = False
+        if not self.ap:
+            self.ap = True
+            dx, dy = a - self.x, b - self.y
+            self.x, self.y = a, b
+            l = (dx ** 2 + dy ** 2) ** .5
+            s, sx, sy = 10, s / l * dx, s / l * dy
+            p = 0
 
             def animate():
-                nonlocal progress
-                progress += step
-                if progress < length:
-                    self.canvas.move(self.bird_id, step_x, step_y)
-                    self.canvas.after(40, animate)
+                nonlocal p
+                p += s
+                if p < l:
+                    self.g.move(self.id, sx, sy)
+                    self.g.after(40, animate)
                 else:
-                    self.canvas.coords(self.bird_id, x - 10, y - 10, x + 10, y + 10)
-                    self.animation_progress = False
-                    if self.current_pillar is None and not self.is_leave:
-                        self.is_can_fly = True
-                        if self.can_seat():
-                            self.choose_random_pillar()
+                    self.g.coords(self.id, a - 10, b - 10, a + 10, b + 10)
+                    self.ap = False
+                    if self.cp is None and not self.leave:
+                        self.flyable = True
+                        if self.cst():
+                            self.crp()
                         else:
                             self.fly()
-                    if on_animation_ended is not None:
-                        on_animation_ended()
+                    if on_end is not None:
+                        on_end()
 
             animate()
 
-    def can_seat(self):
-        return any([pillar.is_fixed for pillar in self.pillars])
+    def cst(self):
+        return any([p.a for p in self.q])
 
-    def is_pillar_broken(self):
-        if not self.current_pillar.is_fixed:
-            if self.leave_timer is not None:
-                self.leave_timer.cancel()
-            self.is_can_fly = True
-            self.fly_away()
-            self.current_pillar = None
-        elif self.current_pillar is not None:
-            self.canvas.after(100, self.is_pillar_broken)
+    def check_pillar(self):
+        if not self.cp.a:
+            if self.lt is not None:
+                self.lt.cancel()
+            self.flyable = True
+            self.fa()
+            self.cp = None
+        elif self.cp is not None:
+            self.g.after(100, self.check_pillar)
 
-    def fly_away(self):
+    def fa(self):
         self.fly()
-        self.current_pillar.decrease_birds_count()
+        self.cp.d()
 
-    def leave(self):
-        self.is_leave = True
-        self.is_can_fly = True
+    def leave_func(self):
+        self.leave = True
+        self.flyable = True
+        self.anim(*r.choice([[i, -10] for i in range(-10, 500, 10)]))
 
-        self.animation(*random.choice([[i, -10] for i in range(-10, 500, 10)]))
+    def crp(self):
+        ap = list(filter(lambda x: x.a, self.q))
+        self.cp = ap[r.randint(0, len(ap) - 1)]
+        if self.cp.a:
+            self.flyable = False
 
-    def choose_random_pillar(self):
-        available_pillars = list(filter(lambda x: x.is_fixed, self.pillars))
-        self.current_pillar = available_pillars[random.randint(0, len(available_pillars) - 1)]
-        if self.current_pillar.is_fixed:
-            self.is_can_fly = False
+            def end_func():
+                self.cp.i()
+                self.lt = T(self.z, self.leave_func)
+                self.lt.start()
+                self.check_pillar()
 
-            def on_animation():
-                self.current_pillar.increase_birds_count()
-                self.leave_timer = Timer(self.sitting_time, self.leave)
-                self.leave_timer.start()
-                self.is_pillar_broken()
-
-            self.animation(
-                random.randrange(self.current_pillar.x - 30, self.current_pillar.x + 30, random.randint(1, 10)),
-                self.current_pillar.y, on_animation_ended=on_animation)
+            self.anim(r.randrange(self.cp.x - 30, self.cp.x + 30, r.randint(1, 10)), self.cp.y, on_end=end_func)
         else:
-            self.current_pillar = None
+            self.cp = None
             self.fly()
 
     def fly(self):
-        if self.is_can_fly and not self.is_leave:
-            x = random.randint(10, 490)
-            y = random.randint(10, 240)
+        if self.flyable and not self.leave:
+            a, b = r.randint(10, 490), r.randint(10, 240)
 
-            def on_animation():
-                self.canvas.after(50, self.fly)
+            def end_func():
+                self.g.after(50, self.fly)
 
-            self.animation(x, y, on_animation_ended=on_animation)
+            self.anim(a, b, on_end=end_func)
 
 
 def main():
     root = Tk()
     root.maxsize(500, 500)
     root.minsize(500, 500)
-    canvas = MainCanvas(root)
-    pillars = []
+    g = X(root)
+    qs = []
     for i in range(1, 5):
-        pillar = Pillar(canvas, base_settings['PILLARS_DURABILITY'], base_settings['PILLARS_REPAIR_INTERVAL'], 70 * i + (50 * (i - 1)), 300)
-        pillars.append(pillar)
-        pillar.draw()
+        q = Q(g, _['B'], _['C'], 70 * i + (50 * (i - 1)), 300)
+        qs.append(q)
+        q.f()
 
     birds = []
-    for _ in range(base_settings['BIRDS_COUNT']):
-        bird = Bird(canvas, random.randint(1, 6), pillars)
+    for _ in range(_['A']):
+        bird = Y(g, r.randint(1, 6), qs)
         birds.append(bird)
-        bird.draw()
+        bird.dr()
         bird.fly()
 
     root.mainloop()
 
 
 if __name__ == '__main__':
-    main() 
+    main()
