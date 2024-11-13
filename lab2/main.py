@@ -1,182 +1,186 @@
 from tkinter import *
-import json as j
-import random as r
-from threading import Timer as T
+import json
+import random
+from threading import Timer
 
 try:
-    with open("data.json", 'r') as s:
-        _ = j.load(s)
+    with open("data.json", 'r') as a:
+        b = json.load(a)
 except FileNotFoundError:
-    _ = {'A': 5, 'B': 2, 'C': 5}
-    with open('data.json', 'w') as s:
-        j.dump(_, s)
+    b = {
+        'A': 5,
+        'B': 2,
+        'C': 5,
+    }
+    with open('data.json', 'w') as a:
+        json.dump(b, a)
 
 
-class X(Canvas):
-    def __init__(self, y: Tk):
-        super().__init__(y, width=500, height=500)
+class d(Canvas):
+
+    def __init__(self, e: Tk):
+        super().__init__(e, width=500, height=500)
         self.pack()
 
 
-class Q:
-    def __init__(self, g: X, l: int, w: int, x: int, y: int):
-        self.l = l
-        self.g = g
-        self.w = w
-        self.k = 0
-        self.x = x
-        self.b = False
-        self.y = y
-        self.s, self.r = None, None
-        self.a = True
-        self.v()
+class f:
 
-    def f(self):
-        self.s = self.g.create_rectangle(self.x, self.y, self.x + 10, self.y + 200, fill='brown', outline='brown')
-        self.r = self.g.create_rectangle(self.x - 30, self.y, self.x + 40, self.y + 10, fill='brown', outline='brown')
-
-    def i(self):
-        self.k += 1
-
-    def d(self):
-        self.k -= 1
-
-    def bq(self):
-        if not self.b:
-            self.g.itemconfigure(self.r, state='hidden')
-            self.g.itemconfigure(self.s, state='hidden')
-            self.a = False
-            self.b = True
-            t = T(self.w, self.fq)
-            t.start()
-
-    def fq(self):
-        self.g.itemconfigure(self.r, state='normal')
-        self.g.itemconfigure(self.s, state='normal')
-        self.a = True
-        self.b = False
+    def __init__(self, g: d, h: int, i: int, j: int, k: int):
+        self.m = h
+        self.n = g
+        self.o = i
+        self.p = 0
+        self.j = j
+        self.q = False
+        self.k = k
+        self.r = None
+        self.s = None
+        self.t = True
+        self.u()
 
     def v(self):
-        if self.a:
-            if self.k >= self.l:
-                self.bq()
-        self.g.after(100, self.v)
+        self.r = self.n.create_rectangle(self.j, self.k, self.j + 10, self.k + 200, fill='brown', outline='brown')
+        self.s = self.n.create_rectangle(self.j - 30, self.k, self.j + 40, self.k + 10, fill='brown', outline='brown')
+
+    def w(self):
+        self.p += 1
+
+    def x(self):
+        self.p -= 1
+
+    def y(self):
+        if not self.q:
+            self.n.itemconfigure(self.s, state='hidden')
+            self.n.itemconfigure(self.r, state='hidden')
+            self.t = False
+            self.q = True
+            a = Timer(self.o, self.z)
+            a.start()
+
+    def z(self):
+        self.n.itemconfigure(self.s, state='normal')
+        self.n.itemconfigure(self.r, state='normal')
+        self.t = True
+        self.q = False
+
+    def u(self):
+        if self.t:
+            if self.p >= self.m:
+                self.y()
+
+        self.n.after(100, self.u)
 
 
-class Y:
-    def __init__(self, g: X, z: int, q: [Q]):
-        self.leave = False
-        self.lt = None
-        self.z = z
-        self.g = g
-        self.x = r.randint(50, 550)
-        self.y = r.randint(50, 250)
-        self.ap = False
-        self.id = None
-        self.flyable = True
-        self.q = q
-        self.cp = None
+class aa:
+    def __init__(self, g: d, bb: int, cc: [f]):
+        self.dd = False
+        self.ee = None
+        self.bb = bb
+        self.n = g
+        self.ff = random.randint(50, 550)
+        self.gg = random.randint(50, 250)
+        self.hh = False
+        self.ii = None
+        self.jj = True
+        self.cc = cc
+        self.kk = None
 
-    def dr(self):
-        self.id = self.g.create_oval(0, 0, 20, 20, fill='grey')
-        self.g.coords(self.id, self.x - 10, self.y - 10, self.x + 10, self.y + 10)
+    def ll(self):
+        self.ii = self.n.create_oval(0, 0, 20, 20, fill='grey')
+        self.n.coords(self.ii, self.ff - 10, self.gg - 10, self.ff + 10, self.gg + 10)
 
-    def anim(self, a, b, on_end=None):
-        self.flyable = False
-        if not self.ap:
-            self.ap = True
-            dx, dy = a - self.x, b - self.y
-            self.x, self.y = a, b
-            l = (dx ** 2 + dy ** 2) ** .5
-            s, sx, sy = 10, s / l * dx, s / l * dy
-            p = 0
+    def mm(self, nn, oo, pp=None):
+        self.jj = False
+        if not self.hh:
+            self.hh = True
+            pq = nn - self.ff
+            rs = oo - self.gg
+            self.ff = nn
+            self.gg = oo
+            st = (pq ** 2 + rs ** 2) ** .5
+            uv = 10
+            wx = uv / st * pq
+            yz = uv / st * rs
 
-            def animate():
-                nonlocal p
-                p += s
-                if p < l:
-                    self.g.move(self.id, sx, sy)
-                    self.g.after(40, animate)
+            ab = 0
+
+            def cd():
+                nonlocal ab
+                ab += uv
+                if ab < st:
+                    self.n.move(self.ii, wx, yz)
+                    self.n.after(40, cd)
                 else:
-                    self.g.coords(self.id, a - 10, b - 10, a + 10, b + 10)
-                    self.ap = False
-                    if self.cp is None and not self.leave:
-                        self.flyable = True
-                        if self.cst():
-                            self.crp()
+                    self.n.coords(self.ii, nn - 10, oo - 10, nn + 10, oo + 10)
+                    self.hh = False
+                    if self.kk is None and not self.dd:
+                        self.jj = True
+                        if self.ef():
+                            self.gh()
                         else:
-                            self.fly()
-                    if on_end is not None:
-                        on_end()
+                            self.ij()
+                    if pp is not None:
+                        pp()
 
-            animate()
+            cd()
 
-    def cst(self):
-        return any([p.a for p in self.q])
+    def ef(self):
+        return any([bb.t for bb in self.cc])
 
-    def check_pillar(self):
-        if not self.cp.a:
-            if self.lt is not None:
-                self.lt.cancel()
-            self.flyable = True
-            self.fa()
-            self.cp = None
-        elif self.cp is not None:
-            self.g.after(100, self.check_pillar)
+    def ij(self):
+        if not self.kk.t:
+            if self.ee is not None:
+                self.ee.cancel()
+            self.jj = True
+            self.kl()
+            self.kk = None
+        elif self.kk is not None:
+            self.n.after(100, self.ij)
 
-    def fa(self):
-        self.fly()
-        self.cp.d()
+    def kl(self):
+        self.ij()
+        self.kk.w()
 
-    def leave_func(self):
-        self.leave = True
-        self.flyable = True
-        self.anim(*r.choice([[i, -10] for i in range(-10, 500, 10)]))
+    def gh(self):
+        self.jj = True
+        self.mm(*random.choice([[i, -10] for i in range(-10, 500, 10)]))
 
-    def crp(self):
-        ap = list(filter(lambda x: x.a, self.q))
-        self.cp = ap[r.randint(0, len(ap) - 1)]
-        if self.cp.a:
-            self.flyable = False
+    def gh(self):
+        available = list(filter(lambda x: x.t, self.cc))
+        self.kk = available[random.randint(0, len(available) - 1)]
+        if self.kk.t:
+            self.jj = False
 
-            def end_func():
-                self.cp.i()
-                self.lt = T(self.z, self.leave_func)
-                self.lt.start()
-                self.check_pillar()
+            def on_done():
+                self.kk.w()
+                self.ee = Timer(self.bb, self.gh)
+                self.ee.start()
+                self.ij()
 
-            self.anim(r.randrange(self.cp.x - 30, self.cp.x + 30, r.randint(1, 10)), self.cp.y, on_end=end_func)
+            self.mm(
+                random.randrange(self.kk.j - 30, self.kk.j + 30, random.randint(1, 10)),
+                self.kk.k, pp=on_done)
         else:
-            self.cp = None
-            self.fly()
-
-    def fly(self):
-        if self.flyable and not self.leave:
-            a, b = r.randint(10, 490), r.randint(10, 240)
-
-            def end_func():
-                self.g.after(50, self.fly)
-
-            self.anim(a, b, on_end=end_func)
-
+            self.kk = None
+            self.gh()
 
 def main():
     root = Tk()
     root.maxsize(500, 500)
     root.minsize(500, 500)
-    g = X(root)
-    qs = []
+    n = d(root)
+    cc = []
     for i in range(1, 5):
-        q = Q(g, _['B'], _['C'], 70 * i + (50 * (i - 1)), 300)
-        qs.append(q)
-        q.f()
+        bb = f(n, b['B'], b['C'], 70 * i + (50 * (i - 1)), 300)
+        cc.append(bb)
+        bb.v()
 
-    birds = []
-    for _ in range(_['A']):
-        bird = Y(g, r.randint(1, 6), qs)
-        birds.append(bird)
-        bird.dr()
-        bird.fly()
+    aa_ = []
+    for _ in range(b['A']):
+        dd = aa(n, random.randint(1, 6), cc)
+        aa_.append(dd)
+        dd.ll()
+        dd.gh()
 
     root.mainloop()
 
