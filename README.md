@@ -30,22 +30,22 @@
 | Students       | 1lab   | 2lab | 3lab | 4lab |
 |----------------|--------|------|------|------|
 | Dvortsov       | сдано  | сдано|      |      |
-| Kazantseva     | сдано  | сдано     |      |      |
+| Kazantseva     | сдано  | сдано|      |      |
 | Antonova       | сдано  | сдано|      |      |
 | Serebrennikova | сдано  | сдано|      |      |
-| Belkov         | сдано  | сдано     |      |      |
+| Belkov         | сдано  | сдано|      |      |
 | Baranov        | сдано  |      |      |      |
 | Politova       | сдано  | сдано|      |      |
-| Grishanov      | сдано  |  сдано    |      |      |
-| Orlovsky       | сдано  | сдано     |      |      |
+| Grishanov      | сдано  | сдано|      |      |
+| Orlovsky       | сдано  | сдано|      |      |
 | Kononov        | сдано  | сдано|      |      |
-| Viklov         | сдано  | сдано     |      |      |
+| Viklov         | сдано  | сдано|      |      |
 | Putintseva     | сдано  | сдано|      |      |
 | Kirushev       | сдано  |сдано |      |      |
 | Frolkin        | сдано  |сдано*|      |      |
-| Matevosov      | сдано  |сдано*|      |      |
+| Matevosov      | сдано  |сдано |      |      |
 | Serov          | сдано  |      |      |      |
-| Li             | сдано  |  сдано* |      |      |
+| Li             | сдано  |сдано*|      |      |
 | Ruzanov| сдано| | | |
 | Baranov| сдано|  | | |
 | Gogin| сдано| сдано*| | | 
