@@ -34,7 +34,7 @@
 | Antonova       | сдано  | сдано|      |      |+
 | Serebrennikova | сдано  | сдано|      |      |+
 | Belkov         | сдано  | сдано|      |      |
-| Baranov        | сдано  |      |      |      |
+| Baranov        | сдано  |Baranov|      |      |
 | Politova       | сдано  | сдано|      |      |
 | Grishanov      | сдано  | сдано|      |      |
 | Orlovsky       | сдано  | сдано|      |      |
@@ -47,7 +47,6 @@
 | Serov          | сдано  |сдано |      |      |
 | Li             | сдано  |сдано*|      |      |
 | Ruzanov| сдано| сдано | | |
-| Baranov| сдано|  | | |
 | Gogin| сдано| сдано*| | | 
 | Agapov| сдано| сдано | | |
 | Pitsik| сдано| сдано | | |
