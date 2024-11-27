@@ -307,9 +307,9 @@ class BirdPillarApp:
         if self.bird_spawn_timer:
             self.root.after_cancel(self.bird_spawn_timer)
             self.bird_spawn_timer = None
-        if self.pillar_spawn_timer:
-            self.root.after_cancel(self.pillar_spawn_timer)
-            self.pillar_spawn_timer = None
+        if self.pillar_repair_timer:
+            self.root.after_cancel(self.pillar_repair_timer)
+            self.pillar_repair_timer = None
 
     def resume_all(self):
         for bird in self.birds:
@@ -322,7 +322,7 @@ class BirdPillarApp:
             pillar.check_birds()  
 
         self.start_bird_spawning()
-        self.start_pillar_spawning()
+        self.start_pillar_repairing()
 
     def on_canvas_click(self, event):
         x, y = event.x, event.y
