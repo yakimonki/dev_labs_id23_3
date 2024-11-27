@@ -4,7 +4,6 @@ from tkinter import ttk
 from threading import Timer
 import json
 
-# Load settings from file
 try:
     with open("settings.json", 'r') as settings:
         base_settings = json.load(settings)
@@ -12,9 +11,8 @@ except FileNotFoundError:
     base_settings = {
         'BIRDS_COUNT': 5,
         'PILLARS_DURABILITY': 2,
-        'PILLAR_SPAWN_INTERVAL': 5,
         'BIRD_SPAWN_INTERVAL': 2000,
-        'PILLAR_SPAWN_INTERVAL': 20000,
+        'PILLAR_REPAIR_INTERVAL': 20000,
     }
     with open('settings.json', 'w') as settings:
         json.dump(base_settings, settings)
@@ -22,11 +20,12 @@ except FileNotFoundError:
 class MainCanvas(Canvas):
 
     def __init__(self, root: Tk):
-        super().__init__(root, width=500, height=500)
+        super().__init__(root, width=500, height=400)
         self.pack()
 
 class Pillar:
     def __init__(self, canvas: MainCanvas, max_birds: int, recovery_time: int, x: int, y: int, width, h):
+        self.pause_check = False
         self.max_birds = max_birds
         self.canvas = canvas
         self.recovery_time = recovery_time
@@ -42,7 +41,7 @@ class Pillar:
         self.check_birds()
 
     def contains(self, x, y):
-        return self.x <= x <= self.x + self.width and self.y <= y <= self.y + self.h
+        return (self.x - 10 <= x <= self.x + self.width + 10) and (self.y <= y <= self.y + 200)
 
     def draw(self):
         self.post_id = self.canvas.create_rectangle(self.x, self.y, self.x + 10, self.y + 200, fill='gray',
@@ -72,14 +71,15 @@ class Pillar:
         self.break_pillar_flag = False
 
     def check_birds(self):
+        if self.pause_check:
+            return  
         if self.is_fixed:
             if self.count_birds >= self.max_birds:
                 self.break_pillar()
-
         self.canvas.after(100, self.check_birds)
 
 class Bird:
-    def __init__(self, canvas: MainCanvas, sitting_time: int, pillars: [Pillar]): # type: ignore
+    def __init__(self, canvas: MainCanvas, sitting_time: int, pillars: [Pillar]): 
         self.is_leave = False
         self.leave_timer = None
         self.sitting_time = sitting_time
@@ -186,129 +186,173 @@ class Bird:
 
 class BirdPillarApp:
     def __init__(self, root):
+        self.paused = False  
+        self.pause_button = Button(root, text="Pause", command=self.toggle_pause)
+        self.pause_button.pack(side=TOP, pady=5)
+
         self.root = root
-        self.root.maxsize(500, 600)
-        self.root.minsize(500, 600)
+        self.root.maxsize(600, 700)
+        self.root.minsize(600, 700)
 
         self.canvas = MainCanvas(root)
         self.canvas.bind("<Button-1>", self.on_canvas_click)
 
-        # Object lists and timers
         self.pillars = []
         self.birds = []
         self.bird_spawn_interval = base_settings['BIRD_SPAWN_INTERVAL']
-        self.pillar_spawn_interval = base_settings['PILLAR_SPAWN_INTERVAL']
-        self.bird_spawn_timer = None
-        self.pillar_spawn_timer = None
+        self.pillar_repair_interval = 5000  
+        self.pillar_repair_timer = None
+        self.animation_paused = False
 
-        # Create interface
         self.create_controls()
 
-        # Initialize objects
         self.initialize_pillars()
         self.initialize_birds()
         self.start_bird_spawning()
-        self.start_pillar_spawning()
+        self.start_pillar_repairing()
 
     def create_controls(self):
+        birds_control_frame = Frame(self.root)
+        birds_control_frame.pack(side=TOP, fill=X, pady=10)
         pillars_control_frame = Frame(self.root)
         pillars_control_frame.pack(side=BOTTOM, fill=X, pady=10)
-        birds_control_frame = Frame(self.root)
-        birds_control_frame.pack(side=TOP, fill = X, pady = 10)
 
-        # Pillar durability slider
-        Label(pillars_control_frame, text="Pillar Durability:").pack(side=LEFT, padx=5)
-        self.pillar_durability_slider = Scale(pillars_control_frame, from_=1, to=20, orient=HORIZONTAL)
-        self.pillar_durability_slider.set(base_settings['PILLARS_DURABILITY'])
-        self.pillar_durability_slider.pack(side=LEFT, padx=5)
-
-        # Pillar spawn interval
-        Label(pillars_control_frame, text="Pillar Spawn Interval (ms):").pack(side=LEFT, padx=5)
-        self.pillar_spawn_interval_box = Spinbox(pillars_control_frame, from_=1000, to=10000, increment=500, width=5, command=self.update_pillar_spawn_interval)
-        self.pillar_spawn_interval_box.pack(side=LEFT, padx=5)
-        self.pillar_spawn_interval_box.delete(0, END)
-        self.pillar_spawn_interval_box.insert(0, self.pillar_spawn_interval)
-
-        # Bird spawn interval
         Label(birds_control_frame, text="Bird Spawn Interval (ms):").pack(side=LEFT, padx=5)
         self.bird_spawn_interval_box = Spinbox(birds_control_frame, from_=500, to=20000, increment=100, width=5, command=self.update_bird_spawn_interval)
         self.bird_spawn_interval_box.pack(side=LEFT, padx=5)
         self.bird_spawn_interval_box.delete(0, END)
         self.bird_spawn_interval_box.insert(0, self.bird_spawn_interval)
 
-        
+        Label(pillars_control_frame, text="Pillar Repair Interval (ms):").pack(side=LEFT, padx=5, pady = 80)
+        self.pillar_repair_interval_box = Spinbox(pillars_control_frame, from_=1000, to=30000, increment=1000, width=5, command=self.update_pillar_repair_interval)
+        self.pillar_repair_interval_box.pack(side=LEFT, padx=5)
+        self.pillar_repair_interval_box.delete(0, END)
+        self.pillar_repair_interval_box.insert(0, self.pillar_repair_interval)
+
+        Label(pillars_control_frame, text="Pillar Durability:").pack(side=LEFT, padx=5)
+        self.pillar_durability_slider = Scale(pillars_control_frame, from_=1, to=20, orient=HORIZONTAL)
+        self.pillar_durability_slider.set(base_settings['PILLARS_DURABILITY'])
+        self.pillar_durability_slider.pack(side=LEFT, padx=5)
+
+    def toggle_animation(self):
+        self.animation_paused = not self.animation_paused
+
+        for bird in self.birds:
+            bird.is_can_fly = not self.animation_paused
+            if self.animation_paused:
+                if bird.leave_timer:
+                    bird.leave_timer.cancel()
+            else:
+                if not bird.is_leave and bird.is_can_fly:
+                    bird.fly()
+
+        self.pause_button.config(text="Resume Animation" if self.animation_paused else "Pause Animation")
 
     def start_bird_spawning(self):
-        """Start bird spawning timer."""
-        if self.bird_spawn_timer:
+        if hasattr(self, 'bird_spawn_timer') and self.bird_spawn_timer:
             self.root.after_cancel(self.bird_spawn_timer)
         self.bird_spawn_timer = self.root.after(self.bird_spawn_interval, self.spawn_bird)
 
     def spawn_bird(self):
-        """Spawn a new bird."""
-        bird = Bird(self.canvas, random.randint(1, 6), self.pillars)
-        self.birds.append(bird)
-        bird.draw()
-        bird.fly()
+        if not self.animation_paused:
+            bird = Bird(self.canvas, random.randint(1, 6), self.pillars)
+            self.birds.append(bird)
+            bird.draw()
+            bird.fly()
         self.start_bird_spawning()
 
     def update_bird_spawn_interval(self):
-        """Update bird spawn interval."""
         try:
             self.bird_spawn_interval = int(self.bird_spawn_interval_box.get())
             self.start_bird_spawning()
         except ValueError:
             pass
 
-    def start_pillar_spawning(self):
-        """Start pillar spawning timer."""
-        if self.pillar_spawn_timer:
-            self.root.after_cancel(self.pillar_spawn_timer)
-        self.pillar_spawn_timer = self.root.after(self.pillar_spawn_interval, self.spawn_pillar)
+    def start_pillar_repairing(self):
+        if self.pillar_repair_timer:
+            self.root.after_cancel(self.pillar_repair_timer)
+        self.pillar_repair_timer = self.root.after(self.pillar_repair_interval, self.repair_damaged_pillars)
 
-    def spawn_pillar(self):
-        """Spawn a new pillar."""
-        x = random.randint(50, 450)
-        y = random.randint(250, 450)
-        new_pillar = Pillar(self.canvas, self.pillar_durability_slider.get(), base_settings['PILLAR_SPAWN_INTERVAL'], x, y, 20, 10)
-        self.pillars.append(new_pillar)
-        new_pillar.draw()
-        self.start_pillar_spawning()
+    def repair_damaged_pillars(self):
+        for pillar in self.pillars:
+            if not pillar.is_fixed:
+                pillar.max_birds = self.pillar_durability_slider.get()  # Update durability from slider
+                pillar.fix_pillar()
+                print(f"Pillar at ({pillar.x}, {pillar.y}) repaired with durability {pillar.max_birds}.")
+        self.start_pillar_repairing()
 
-    def update_pillar_spawn_interval(self):
-        """Update pillar spawn interval."""
+    def update_pillar_repair_interval(self):
         try:
-            self.pillar_spawn_interval = int(self.pillar_spawn_interval_box.get())
-            self.start_pillar_spawning()
+            self.pillar_repair_interval = int(self.pillar_repair_interval_box.get())
+            self.start_pillar_repairing()
         except ValueError:
             pass
 
-    def on_canvas_click(self, event):
-        """Handle pillar placement or editing."""
-        x, y = event.x, event.y
-        
-        # Проверка на пересечение с другими столбами
+    def toggle_pause(self):
+        self.paused = not self.paused
+        if self.paused:
+            self.pause_button.config(text="Resume")
+            self.pause_all()
+        else:
+            self.pause_button.config(text="Pause")
+            self.resume_all()
+
+    def pause_all(self):
+        for bird in self.birds:
+            bird.is_can_fly = False
+
         for pillar in self.pillars:
-            if abs(pillar.x - x) < 100 and abs(pillar.y - y) < 100:  # Минимальное расстояние в 50 пикселей
-                print("Too close to an existing pillar. Cannot create a new one.")
+            pillar.pause_check = True
+
+        if self.bird_spawn_timer:
+            self.root.after_cancel(self.bird_spawn_timer)
+            self.bird_spawn_timer = None
+        if self.pillar_spawn_timer:
+            self.root.after_cancel(self.pillar_spawn_timer)
+            self.pillar_spawn_timer = None
+
+    def resume_all(self):
+        for bird in self.birds:
+            bird.is_can_fly = True
+            if not bird.animation_progress:  
+                bird.fly()
+
+        for pillar in self.pillars:
+            pillar.pause_check = False
+            pillar.check_birds()  
+
+        self.start_bird_spawning()
+        self.start_pillar_spawning()
+
+    def on_canvas_click(self, event):
+        x, y = event.x, event.y
+
+        for pillar in self.pillars:
+            if pillar.contains(x, y):
+                new_durability = self.pillar_durability_slider.get()
+                pillar.max_birds = new_durability
+                print(f"Updated pillar at ({pillar.x}, {pillar.y}) to durability {pillar.max_birds}")
                 return
 
-        # Если столб не найден рядом, создаём новый
-        new_pillar = Pillar(self.canvas, self.pillar_durability_slider.get(), base_settings['PILLAR_SPAWN_INTERVAL'], x, y, 20, 10)
+        for pillar in self.pillars:
+            if abs(pillar.x - x) < 100 and abs(pillar.y - y) < 100:
+                print("Too close to an existing pillar. Cannot place a new one.")
+                return
+
+        new_pillar = Pillar(self.canvas, self.pillar_durability_slider.get(), base_settings['PILLAR_REPAIR_INTERVAL'], x, y, 20, 10)
         self.pillars.append(new_pillar)
         new_pillar.draw()
         print(f"Added new pillar at ({x}, {y}) with durability {new_pillar.max_birds}")
 
+
     def initialize_pillars(self):
-        """Initialize default pillars."""
         self.pillars.clear()
         for i in range(4):
-            pillar = Pillar(self.canvas, base_settings['PILLARS_DURABILITY'], base_settings['PILLAR_SPAWN_INTERVAL'], 70 * i + 50, 300, 20, 10)
+            pillar = Pillar(self.canvas, base_settings['PILLARS_DURABILITY'], base_settings['PILLAR_REPAIR_INTERVAL'], 70 * i + 50, 300, 20, 10)
             self.pillars.append(pillar)
             pillar.draw()
 
     def initialize_birds(self):
-        """Initialize default birds."""
         self.birds.clear()
         for _ in range(base_settings['BIRDS_COUNT']):
             bird = Bird(self.canvas, random.randint(1, 6), self.pillars)
