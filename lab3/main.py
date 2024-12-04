@@ -4,18 +4,18 @@ import math
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
-from PyQt5.QtGui import QPainter, QColor, QFont, QPixmap
-from PyQt5.QtWidgets import QPushButton, QLineEdit, QSpinBox, QSlider
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QPainter, QColor, QPixmap
+from PyQt5.QtWidgets import QPushButton, QSpinBox
 import json
 from PyQt5.QtCore import QTimer, QDateTime
 import os
 
-os.environ["QT_SCALE_FACTOR"] = "1"  
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1" 
+os.environ["QT_SCALE_FACTOR"] = "0"  
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"  #автоматическое масштабирование в зависимости от разрешения экрана
 
 class Cloud:
-    def __init__(self, x, y, shape, rain_density, fall_speed_min, fall_speed_max, angle_min, angle_max, width=120, height=60):
+    def __init__(self, x, y, shape, rain_density, fall_speed_min, fall_speed_max, angle_min, angle_max, rain_width, width=120, height=60):
         self.x = x
         self.y = y
         self.shape = shape  
@@ -26,11 +26,12 @@ class Cloud:
         self.fall_speed_max = fall_speed_max
         self.angle_min = angle_min
         self.angle_max = angle_max
+        self.rain_width = rain_width 
         self.rains = []  
 
     def draw(self, painter, selected=False):
         if self.shape == "Прямоугольник":
-            painter.setBrush(QBrush(QColor(176,224,230)))
+            painter.setBrush(QBrush(QColor("navy")))
             if selected:
                 pen = QPen(QColor(0, 71, 171), 1)
                 painter.setPen(pen)
@@ -38,7 +39,7 @@ class Cloud:
                 painter.setPen(Qt.NoPen)
             painter.drawRect(self.x, self.y, self.width, self.height)
         elif self.shape == "Овал":
-            painter.setBrush(QBrush(QColor(176,224,230)))
+            painter.setBrush(QBrush(QColor("navy")))
             if selected:
                 pen = QPen(QColor(0, 71, 171), 1)
                 painter.setPen(pen)
@@ -57,7 +58,7 @@ class Cloud:
 
                 if selected:
                     path = QPainterPath()
-                    path.addEllipse(new_x, new_y, scaled_pixmap.width(), scaled_pixmap.height())  # Пример: добавляем эллипс, замените на нужную форму
+                    path.addEllipse(new_x, new_y, scaled_pixmap.width(), scaled_pixmap.height())  
                     pen = QPen(QColor(0, 71, 171), 1)
                     painter.setPen(pen)
                     painter.setBrush(Qt.NoBrush)
@@ -71,8 +72,8 @@ class RainDrop:
         self.x = x
         self.y = y
         self.height = 30  
-        self.opacity = random.uniform(0.5, 1.0)  
-        self.color = QColor("blue")
+        self.opacity = random.uniform(0.6, 1.0)  
+        self.color = QColor("dodgerblue")
         self.angle = 0
        
     def fall(self, speed_min, speed_max, angle_min, angle_max):
@@ -83,7 +84,10 @@ class RainDrop:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(800, 600)  
+        self.setFixedSize(900, 600)  
+
+        self.setWindowTitle("Chill guy and raindrop")
+        self.background_image = QPixmap("fon.jpg")
 
         self.config = self.load_config()
 
@@ -102,23 +106,24 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        
         self.add_cloud_button = QPushButton("Добавить тучку", self)
-        self.add_cloud_button.setGeometry(680, 50, 110, 50)
+        self.add_cloud_button.setGeometry(780, 200, 110, 30)
         self.add_cloud_button.clicked.connect(self.add_cloud)
 
         self.delete_cloud_button = QPushButton("Удалить тучку", self)
-        self.delete_cloud_button.setGeometry(680, 200, 110, 50)
+        self.delete_cloud_button.setGeometry(780, 280, 110, 30)
         self.delete_cloud_button.clicked.connect(self.delete_cloud)
 
         self.cloud_type_combo = QComboBox(self)
-        self.cloud_type_combo.setGeometry(680, 125, 110, 50)
+        self.cloud_type_combo.setGeometry(780, 240, 110, 30)
         self.cloud_type_combo.addItem("Прямоугольник")
         self.cloud_type_combo.addItem("Овал")
         self.cloud_type_combo.addItem("Винни-Пух")
 
         self.rain_density_label = QLabel("Плотность дождя:", self)
-        self.speed_min_label = QLabel("Минимальная скорость:", self)
-        self.speed_max_label = QLabel("Максимальная скорость:", self)
+        self.speed_min_label = QLabel("Мin скорость:", self)
+        self.speed_max_label = QLabel("Max скорость:", self)
 
         self.rain_density_spin = QSpinBox(self)
         self.rain_density_spin.setValue(self.max_rains)
@@ -128,10 +133,6 @@ class MainWindow(QMainWindow):
 
         self.speed_max_spin = QSpinBox(self)
         self.speed_max_spin.setValue(self.fall_speed_max)
-
-        self.rain_density_label.setGeometry(680, 180, 120, 40)
-        self.speed_min_label.setGeometry(680, 280, 120, 40)
-        self.speed_max_label.setGeometry(680, 380, 120, 40)
 
         self.speed_min_spin.valueChanged.connect(self.update_speed_parameters)
         self.speed_max_spin.valueChanged.connect(self.update_speed_parameters)
@@ -164,21 +165,25 @@ class MainWindow(QMainWindow):
 
         self.angle_max_label = QLabel("Max угол наклона:", self)
         self.angle_max_spin = QSpinBox(self)
-        self.angle_max_spin.setRange(-10, 10)  # Задайте диапазон по вашему усмотрению
+        self.angle_max_spin.setRange(-10, 10)  
         self.angle_max_spin.setValue(self.angle_max)
 
+        self.rain_width_label = QLabel("Ширина капли:", self)
+        self.rain_width_spin = QSpinBox(self)
+        self.rain_width_spin.setRange(1, 10)
+        self.rain_width_spin.setValue(1)
+
+        self.rain_width_spin.valueChanged.connect(self.update_rain_size)
         self.rain_density_spin.valueChanged.connect(self.update_cloud_params)
         self.speed_min_spin.valueChanged.connect(self.update_cloud_params)
         self.speed_max_spin.valueChanged.connect(self.update_cloud_params)
-
         self.cloud_x_spin.valueChanged.connect(self.update_cloud_position)
         self.cloud_y_spin.valueChanged.connect(self.update_cloud_position)
-
         self.angle_min_spin.valueChanged.connect(self.update_angle_parameters)
         self.angle_max_spin.valueChanged.connect(self.update_angle_parameters)
 
 
-        y_offset = 200
+        y_offset = 100
         for i, (label, spin_box) in enumerate([
             (self.cloud_x_label, self.cloud_x_spin),
             (self.cloud_y_label, self.cloud_y_spin),
@@ -188,10 +193,11 @@ class MainWindow(QMainWindow):
             (self.speed_min_label, self.speed_min_spin),
             (self.speed_max_label, self.speed_max_spin),
             (self.angle_min_label, self.angle_min_spin),
-            (self.angle_max_label, self.angle_max_spin)
+            (self.angle_max_label, self.angle_max_spin),
+            (self.rain_width_label, self.rain_width_spin)
         ]):
-            label.setGeometry(10, y_offset + i * 30, 120, 20)
-            spin_box.setGeometry(140, y_offset + i * 30, 100, 20)
+            label.setGeometry(10, y_offset + i * 30, 90, 20)
+            spin_box.setGeometry(120, y_offset + i * 30, 40, 20)
 
     def mousePressEvent(self, event):
         clicked_x, clicked_y = event.x(), event.y()
@@ -231,6 +237,7 @@ class MainWindow(QMainWindow):
         self.speed_min_spin.blockSignals(True)
         self.angle_min_spin.blockSignals(True)
         self.angle_max_spin.blockSignals(True)
+        self.rain_width_spin.blockSignals(True)
 
         self.cloud_x_spin.setValue(self.selected_cloud.x)
         self.cloud_y_spin.setValue(self.selected_cloud.y)
@@ -241,6 +248,7 @@ class MainWindow(QMainWindow):
         self.speed_max_spin.setValue(self.selected_cloud.fall_speed_max)
         self.angle_min_spin.setValue(self.selected_cloud.angle_min)
         self.angle_max_spin.setValue(self.selected_cloud.angle_max)
+        self.rain_width_spin.setValue(int(self.selected_cloud.rains[0].width) if self.selected_cloud.rains else 3)
 
         self.cloud_x_spin.blockSignals(False)
         self.cloud_y_spin.blockSignals(False)
@@ -251,6 +259,7 @@ class MainWindow(QMainWindow):
         self.speed_max_spin.blockSignals(False)
         self.angle_min_spin.blockSignals(False)
         self.angle_max_spin.blockSignals(False)
+        self.rain_width_spin.blockSignals(False)
 
     def update_speed_parameters(self):
         if not hasattr(self, 'selected_cloud') or not self.selected_cloud:
@@ -261,6 +270,17 @@ class MainWindow(QMainWindow):
 
         for rain in self.selected_cloud.rains:
             rain.fall(self.selected_cloud.fall_speed_min, self.selected_cloud.fall_speed_max, self.selected_cloud.angle_min, self.selected_cloud.angle_max)
+
+        self.update()
+
+    def update_rain_size(self):
+        if not hasattr(self, 'selected_cloud') or not self.selected_cloud:
+            return
+
+        self.selected_cloud.rain_width = self.rain_width_spin.value() 
+        for rain in self.selected_cloud.rains:
+            rain.width = self.selected_cloud.rain_width 
+            #rain.height = self.rain_height_spin.value()
 
         self.update()
 
@@ -313,7 +333,7 @@ class MainWindow(QMainWindow):
 
         cloud = Cloud(
             random.randint(0, 600), random.randint(0, 100), shape=cloud_type,
-            rain_density=rain_density, fall_speed_min=fall_speed_min, fall_speed_max=fall_speed_max, angle_min = angle_min, angle_max = angle_max)
+            rain_density=rain_density, fall_speed_min=fall_speed_min, fall_speed_max=fall_speed_max, angle_min = angle_min, angle_max = angle_max, rain_width = 1)
         self.clouds.append(cloud)
         self.update()
 
@@ -348,6 +368,7 @@ class MainWindow(QMainWindow):
                 x = random.randint(self.selected_cloud.x, self.selected_cloud.x + self.selected_cloud.width)
                 y = self.selected_cloud.y + self.selected_cloud.height // 2
                 rain = RainDrop(x, y)
+                rain.width = self.selected_cloud.rain_width
                 self.selected_cloud.rains.append(rain)
 
             for rain in self.selected_cloud.rains:
@@ -361,6 +382,10 @@ class MainWindow(QMainWindow):
                     x = random.randint(cloud.x, cloud.x + cloud.width)
                     y = cloud.y + cloud.height // 2
                     rain = RainDrop(x, y)
+                    if cloud.rains:
+                        rain.width = cloud.rain_width
+                    else:
+                        rain.width = 1
                     cloud.rains.append(rain)
 
                 for rain in cloud.rains:
@@ -386,6 +411,9 @@ class MainWindow(QMainWindow):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        scaled_image = self.background_image.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        painter.drawPixmap(self.rect(), scaled_image)
 
         for cloud in self.clouds:
             cloud.draw(painter, selected=(cloud == self.selected_cloud))
