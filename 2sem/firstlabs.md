@@ -180,3 +180,10 @@ Path это путь, а total_distance это дистанция (len(path)).
 Принимает хеш, словарь, максимальное количество символов (с ограничением в 8) и возвращает id задачи.<br>
 @app.get("/get_status")
 Принимает id и возвращает статус задачи.
+
+## Курсы по fast api
+[Артем Шумейко](https://youtube.com/playlist?list=PLuW7Z72R04bi313KhHamabibc8JW2HDU3&si=pw4q-OImqdknAo7c)  <br>
+[Программирование и иже с ним(смотреть на свой страх и риск, но чувак сильный)](https://youtube.com/playlist?list=PLeLN0qH0-mCVQKZ8-W1LhxDcVlWtTALCS&si=swC88v6orGsczS0S)
+
+## Распределение
+[gsheets](https://docs.google.com/spreadsheets/d/1uzmd1FTQv-3XlK1xgTwTjuGs_30tBCZ0Kqic1MXAyc4/edit?gid=0#gid=0)
