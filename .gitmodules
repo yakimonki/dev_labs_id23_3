@@ -1,0 +1,3 @@
+[submodule "sem2/File_manager"]
+	path = sem2/File_manager
+	url = https://github.com/feuerstrahll/File_manager.git
