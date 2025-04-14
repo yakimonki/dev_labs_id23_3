@@ -1,89 +1,109 @@
-# app/api/image_processing.py
-from fastapi import APIRouter, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel
 import base64
 import numpy as np
 from PIL import Image
 import io
-import math
+import cv2
+from typing import Optional, Literal
+import logging
 
+# Создаем объект FastAPI
+app = FastAPI()
+
+# Создаем APIRouter для обработки запросов
 router = APIRouter()
 
+# Настройка логгера
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Модели запросов и ответов
 class ImageRequest(BaseModel):
-    image_base64: str  # Строка base64 с изображением
+    image: str  # Строка base64 с изображением
+    algorithm: Literal["otsu"] = "otsu"  # Доступные алгоритмы
+    threshold: Optional[int] = None  # Порог для простой бинаризации
 
-def otsu_binarization(image_array: np.ndarray) -> bytes:
-    """
-    Реализация алгоритма Отсу для бинаризации изображения
-    без использования OpenCV.
-    Возвращает бинаризованное изображение в формате base64.
-    """
-    # Конвертация в grayscale, если нужно
-    if len(image_array.shape) == 3:
-        image_array = np.dot(image_array[..., :3], [0.2989, 0.5870, 0.1140])
-    
-    # Нормализация значений пикселей в диапазон 0-255
-    image_array = image_array.astype(np.uint8)
-    
-    # Вычисление гистограммы
-    hist = np.histogram(image_array, bins=256, range=(0, 255))[0]
-    
-    # Нормализация гистограммы
-    hist_norm = hist.astype(np.float32) / hist.sum()
-    
-    # Вычисление кумулятивных сумм и средних
-    cum_sum = np.cumsum(hist_norm)
-    cum_mean = np.cumsum(hist_norm * np.arange(256))
-    
-    # Общее среднее значение
-    global_mean = cum_mean[-1]
-    
-    # Вычисление межклассовой дисперсии
-    max_variance = 0
-    optimal_threshold = 0
-    
-    for t in range(1, 256):
-        w0 = cum_sum[t]
-        w1 = 1 - w0
-        
-        if w0 == 0 or w1 == 0:
-            continue
-            
-        mean0 = cum_mean[t] / w0
-        mean1 = (global_mean - cum_mean[t]) / w1
-        
-        between_variance = w0 * w1 * (mean0 - mean1) ** 2
-        
-        if between_variance > max_variance:
-            max_variance = between_variance
-            optimal_threshold = t
-    
-    # Применение порога
-    binary_image = np.where(image_array > optimal_threshold, 255, 0).astype(np.uint8)
-    
-    # Конвертация в байты через PIL
-    img = Image.fromarray(binary_image)
-    byte_arr = io.BytesIO()
-    img.save(byte_arr, format='PNG')
-    return base64.b64encode(byte_arr.getvalue()).decode('utf-8')
+class ImageResponse(BaseModel):
+    binarized_image: str
+    algorithm_used: str
+    original_size: tuple[int, int]
+    processed_size: tuple[int, int]
+    processing_time_ms: float
 
-@router.post("/binary_image")
-async def binary_image(image_data: ImageRequest):
+# Вспомогательные функции
+def validate_image_size(image_array: np.ndarray):
+    """Проверяет размер изображения"""
+    max_size = 5000  # Максимальный размер по любой стороне
+    if max(image_array.shape) > max_size:
+        raise ValueError(f"Изображение слишком большое. Максимальный размер: {max_size}x{max_size}")
+
+def image_to_base64(image_array: np.ndarray) -> str:
+    """Конвертирует numpy array в base64 строку (PNG)"""
+    success, buffer = cv2.imencode('.png', image_array)
+    if not success:
+        raise ValueError("Ошибка кодирования изображения в PNG")
+    return base64.b64encode(buffer).decode('utf-8')
+
+def base64_to_image(base64_str: str) -> np.ndarray:
+    """Конвертирует base64 строку в numpy array"""
     try:
-        # Декодируем base64
-        image_bytes = base64.b64decode(image_data.image_base64)
+        image_bytes = base64.b64decode(base64_str)
         image = Image.open(io.BytesIO(image_bytes))
-        
-        # Конвертация в numpy array
-        image_array = np.array(image)
-        
-        # Применяем бинаризацию
-        result_base64 = otsu_binarization(image_array)
-        
-        return {"binary_image": result_base64}
-    
+        return np.array(image)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Ошибка обработки изображения: {str(e)}"
-        )
+        raise ValueError(f"Ошибка декодирования base64: {str(e)}")
+
+# Алгоритмы бинаризации
+def apply_otsu(image_array: np.ndarray) -> np.ndarray:
+    """Реализация алгоритма Отсу для бинаризации изображения без использования cv2.THRESH_OTSU"""
+    if len(image_array.shape) == 3:
+        image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+    
+    pixel_values = image_array.flatten()
+    hist, bin_edges = np.histogram(pixel_values, bins=256, range=(0, 255))
+    total_pixels = image_array.size
+    prob = hist / total_pixels
+    cumsum = np.cumsum(prob)
+    cumulative_mean = np.cumsum(prob * np.arange(256))
+
+    max_between_class_variance = 0
+    best_threshold = 0
+
+    for t in range(1, 256):
+        p1 = cumsum[t]
+        p2 = 1 - p1
+        mean1 = cumulative_mean[t] / p1 if p1 > 0 else 0
+        mean2 = (cumulative_mean[-1] - cumulative_mean[t]) / p2 if p2 > 0 else 0
+        between_class_variance = p1 * p2 * (mean1 - mean2) ** 2
+
+        if between_class_variance > max_between_class_variance:
+            max_between_class_variance = between_class_variance
+            best_threshold = t
+
+    _, binary_image = cv2.threshold(image_array, best_threshold, 255, cv2.THRESH_BINARY)
+    return binary_image
+
+# Основной эндпоинт для обработки изображения
+@router.post("/binary_image")
+async def binary_image(request: ImageRequest):
+    try:
+        # Декодируем изображение из base64 в numpy array
+        image_array = base64_to_image(request.image)
+
+        # Применяем выбранный алгоритм
+        if request.algorithm == "otsu":
+            processed_image = apply_otsu(image_array)
+        else:
+            raise HTTPException(status_code=400, detail="Неподдерживаемый алгоритм")
+
+        # Преобразуем обработанное изображение обратно в base64
+        binarized_image_base64 = image_to_base64(processed_image)
+        with open(r"C:\Users\nasty\Practicum_2kurs\ImageBinarization\binarized_image.txt", 'w') as f:
+            f.write(binarized_image_base64)
+        return {"binarized_image": binarized_image_base64}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Произошла ошибка на сервере")
+
+# Регистрация роутера в приложении FastAPI
+app.include_router(router)
