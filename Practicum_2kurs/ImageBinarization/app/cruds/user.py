@@ -19,14 +19,15 @@ def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 def create_user(db: Session, user: UserCreate):
+    hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
-        hashed_password=get_password_hash(user.password),
-        is_active=True
+        hashed_password=hashed_password,
+        is_active=True  # Устанавливаем по умолчанию
     )
     db.add(db_user)
     db.commit()
-    db.refresh(db_user)
+    db.refresh(db_user)  # Важно: обновляем объект для получения ID
     return db_user
 
 

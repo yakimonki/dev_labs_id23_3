@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from jose import JWTError
 from app.core.security import create_access_token, verify_token
 from app.cruds.user import get_user_by_email, create_user
-from app.schemas.user import UserCreate, User
+from app.schemas.user import UserCreate, UserMeResponse, UserLogin, User
 from app.db.session import get_db
 from app.core.security import verify_password, get_password_hash
 from app.core.dependencies import get_current_user
@@ -30,78 +30,82 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     except JWTError:
         raise credentials_exception
 
-@router.post("/sign-up/", response_model=User)
+@router.post("/sign-up/", response_model=UserMeResponse)
 async def sign_up(user: UserCreate, db: Session = Depends(get_db)):
     """
-    Регистрирует нового пользователя.
-
-    Параметры:
-    - user: Данные нового пользователя (email и пароль).
-    - db: Сессия базы данных (автоматически внедряется через Depends).
-
-    Возвращает:
-    - Данные зарегистрированного пользователя (схема User).
-
-    Ошибки:
-    - 400: Если пользователь с таким email уже зарегистрирован.
-    """
-    # Проверяем, существует ли пользователь с таким email
-    db_user = get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    Регистрация нового пользователя
     
-    #hashed_password = get_password_hash(user.password)
-    # Передаем параметры напрямую, а не словарь
-    new_user = create_user(
-        db=db,
-        user=UserCreate(email=user.email, password=user.password)  # Мы передаем не хешированный пароль, а обычный
-    )
-
-    # Генерируем токен для нового пользователя
-    access_token = create_access_token(data={"sub": new_user.email})
-
-    # Возвращаем данные нового пользователя и токен
-    return {
-        "id": new_user.id,
-        "email": new_user.email,
-        "token": access_token,
-    }
-
+    Параметры:
+    - email: валидный email
+    - password: пароль (минимум 8 символов)
+    
+    Возвращает:
+    - id: ID пользователя
+    - email: email пользователя
+    - is_active: статус аккаунта
+    - token: JWT токен (опционально)
+    """
+    # Проверка существующего пользователя
+    if get_user_by_email(db, email=user.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    try:
+        # Создание пользователя
+        db_user = create_user(db=db, user=user)
+        
+        # Генерация токена
+        access_token = create_access_token(data={"sub": db_user.email})
+        
+        return {
+            "id": db_user.id,
+            "email": db_user.email,
+            "is_active": db_user.is_active,
+            "token": access_token
+        }
+        
+    except Exception as e:
+        print(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed"
+        )
+    
 @router.post("/login/")
-def login(user: UserCreate, db: Session = Depends(get_db)):
-    """
-    Проверяет существование пользователя с указанным email.
-    Проверяет правильность введенного пароля.
-    Если все верно, генерирует новый токен для пользователя.
-    Возвращает данные пользователя с новым токеном.
-    """
-    # Получаем пользователя по email
+def login(user: UserLogin, db: Session = Depends(get_db)):  # Используем UserLogin вместо UserCreate
     db_user = get_user_by_email(db, email=user.email)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-
-    # Генерируем токен
-    access_token = create_access_token(data={"sub": db_user.email})
-
-    # Возвращаем данные пользователя и токен
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password"
+        )
+    
     return {
         "id": db_user.id,
         "email": db_user.email,
-        "token": access_token,
+        "token": create_access_token(data={"sub": db_user.email})
     }
 
-@router.get("/users/me/", response_model=User)
-def read_users_me(current_user: User = Depends(get_current_user)):
+@router.get("/users/me/", response_model=UserMeResponse)
+async def read_users_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+    ):
     """
-    Возвращает данные текущего авторизованного пользователя.
-
-    Параметры:
-    - current_user: Данные текущего пользователя (автоматически извлекаются через Depends).
-
+    Получение информации о текущем авторизованном пользователе
+    
+    Требует:
+    - Валидный JWT токен в заголовке Authorization
+    
     Возвращает:
-    - Данные текущего пользователя (схема User).
-
-    Ошибки:
-    - 401: Если пользователь не авторизован.
+    - id: идентификатор пользователя
+    - email: email пользователя
+    - is_active: статус активации
     """
-    return current_user
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "is_active": current_user.is_active
+    }

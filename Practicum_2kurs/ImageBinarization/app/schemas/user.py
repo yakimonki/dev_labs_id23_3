@@ -1,14 +1,19 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
-class UserBase(BaseModel):
+class User(BaseModel):
     email: EmailStr
 
-class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+class UserCreate(User):
+    password: str
 
-class User(UserBase):
+class UserLogin(User):
+    password: str
+
+class UserMeResponse(BaseModel):
     id: int
-    is_active: bool
-   
+    email: str
+    token: Optional[str] = None
+    
     class Config:
         from_attributes = True
