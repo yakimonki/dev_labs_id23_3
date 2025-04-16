@@ -1,20 +1,48 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Request
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, Optional
 from app.schemas.user import UserCreate, User, UserLogin, UserWithToken
 from app.schemas.graph import Graph, PathResult
 from app.cruds import user as user_crud
-from app.core.security import verify_password, create_access_token, oauth2_scheme
+from app.core.security import (
+    verify_password, 
+    create_access_token, 
+    verify_token,
+    set_token_cookie,
+    TOKEN_COOKIE_NAME
+)
 from app.db.database import get_db
 from app.services.tsp import solve_tsp
 from datetime import timedelta
-from jose import JWTError, jwt
 
 router = APIRouter()
 
 
+async def get_current_user(
+    db: Session = Depends(get_db),
+    access_token: Optional[str] = Cookie(None)
+) -> Any:
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    email = verify_token(access_token)
+    user = user_crud.get_user_by_email(db, email=email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
+
+
 @router.post("/sign-up/", response_model=UserWithToken)
-def sign_up(user: UserCreate, db: Session = Depends(get_db)) -> Any:
+def sign_up(
+    user: UserCreate, 
+    db: Session = Depends(get_db),
+    response: Response = None
+) -> Any:
     db_user = user_crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(
@@ -26,6 +54,7 @@ def sign_up(user: UserCreate, db: Session = Depends(get_db)) -> Any:
         data={"sub": user.email},
         expires_delta=timedelta(minutes=30)
     )
+    set_token_cookie(response, token)
     return UserWithToken(
         id=user.id,
         email=user.email,
@@ -34,7 +63,11 @@ def sign_up(user: UserCreate, db: Session = Depends(get_db)) -> Any:
 
 
 @router.post("/login/", response_model=UserWithToken)
-def login(user: UserLogin, db: Session = Depends(get_db)) -> Any:
+def login(
+    user: UserLogin, 
+    db: Session = Depends(get_db),
+    response: Response = None
+) -> Any:
     db_user = user_crud.get_user_by_email(db, email=user.email)
     if not db_user:
         raise HTTPException(
@@ -50,6 +83,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)) -> Any:
         data={"sub": user.email},
         expires_delta=timedelta(minutes=30)
     )
+    set_token_cookie(response, token)
     return UserWithToken(
         id=db_user.id,
         email=db_user.email,
@@ -57,36 +91,20 @@ def login(user: UserLogin, db: Session = Depends(get_db)) -> Any:
     )
 
 
+@router.post("/logout/")
+def logout(response: Response):
+    response.delete_cookie(TOKEN_COOKIE_NAME)
+    return {"message": "Successfully logged out"}
+
+
 @router.get("/users/me/", response_model=User)
-def read_users_me(
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-) -> Any:
-    try:
-        payload = jwt.decode(token, "your-secret-key-here", algorithms=["HS256"])
-        email: str = payload.get("sub")
-        if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials"
-            )
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
-        )
-    user = user_crud.get_user_by_email(db, email=email)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    return user
+def read_users_me(current_user: User = Depends(get_current_user)) -> Any:
+    return current_user
 
 
 @router.post("/shortest-path/", response_model=PathResult)
 def get_shortest_path(
     graph: Graph,
-    token: str = Depends(oauth2_scheme)
+    current_user: User = Depends(get_current_user)
 ) -> PathResult:
     return solve_tsp(graph)
