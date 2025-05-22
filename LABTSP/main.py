@@ -1,16 +1,13 @@
 from fastapi import FastAPI
-from app.api.endpoints import router
-from app.db.database import engine
-from app.models.user import Base
+from app.api import websocket
+from app.core.config import settings
+import uvicorn
+from app.celery.celery_app import celery_app
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+app = FastAPI(title=settings.PROJECT_NAME)
 
-app = FastAPI(title="TSP API")
-
-# Include routers
-app.include_router(router)
+# Include WebSocket router
+app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
